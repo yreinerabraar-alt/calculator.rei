@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Master Suite — Kalkulator Bangun Datar Lengkap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #070a12;
+            --surface-glass: rgba(15, 23, 42, 0.75);
+            --surface-card: rgba(22, 32, 54, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent-cyan: #06b6d4;
+            --accent-cyan-glow: rgba(6, 182, 212, 0.35);
+            --accent-purple: #a855f7;
+            --accent-emerald: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.22) 0px, transparent 45%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.2) 0px, transparent 45%),
+                radial-gradient(at 50% 100%, rgba(168, 85, 247, 0.18) 0px, transparent 50%);
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 18px;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Blobs */
+        .ambient-blur {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(140px);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+
+        .blur-1 { top: 5%; left: 10%; background: #6366f1; }
+        .blur-2 { bottom: 5%; right: 10%; background: #06b6d4; }
+
+        .app-container {
+            width: 100%;
+            max-width: 1050px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 16px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .badge-pill span.dot {
+            width: 7px;
+            height: 7px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #38bdf8;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.8); }
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.98rem;
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        /* Shape Navigation Tabs */
+        .shape-nav-wrap {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 6px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            scrollbar-width: none;
+        }
+
+        .shape-nav-wrap::-webkit-scrollbar {
+            display: none;
+        }
+
+        .shape-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 16px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border-radius: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.25s ease;
+        }
+
+        .shape-tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .shape-tab-btn.active {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        /* Workspace Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.05fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 22px;
+            padding: 26px;
+            box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        /* Unit Selector */
+        .unit-select-wrap {
+            display: flex;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            padding: 3px;
+        }
+
+        .unit-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .unit-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }
+
+        /* Dynamic Inputs Container */
+        .inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .input-card {
+            background: rgba(11, 17, 32, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 15px 16px;
+            transition: all 0.2s ease;
+        }
+
+        .input-card:focus-within {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 16px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .input-label-row label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-hint {
+            font-size: 0.76rem;
+            color: #38bdf8;
+            font-weight: 500;
+        }
+
+        .number-input-field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            padding: 10px 14px;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .number-input-field:focus {
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Sliders */
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            outline: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 0 10px #6366f1;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            background: #818cf8;
+        }
+
+        /* Presets */
+        .presets-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .presets-row {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .preset-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 5px 11px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-chip:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: #fff;
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Visualizer Panel */
+        .preview-box {
+            position: relative;
+            background: radial-gradient(circle at center, rgba(30, 41, 59, 0.6) 0%, rgba(11, 17, 32, 0.95) 100%);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.6);
+        }
+
+        .grid-backdrop {
+            position: absolute;
+            inset: 0;
+            background-size: 20px 20px;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            pointer-events: none;
+        }
+
+        #visualSvg {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Results Display Grid */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: rgba(11, 17, 32, 0.65);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .metric-card.luas-card::before {
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+        }
+
+        .metric-card.keliling-card::before {
+            background: linear-gradient(90deg, #06b6d4, #10b981);
+        }
+
+        .metric-card.extra-card::before {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .metric-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            word-break: break-all;
+        }
+
+        .metric-unit {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* Formula Card */
+        .formula-card {
+            background: rgba(9, 14, 28, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 0.85rem;
+        }
+
+        .formula-title {
+            color: #38bdf8;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .formula-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+        }
+
+        .formula-line:last-child {
+            border-bottom: none;
+        }
+
+        .formula-line strong {
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Action Buttons */
+        .actions-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border: 1px solid var(--border-glass);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 999;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-blur blur-1"></div>
+    <div class="ambient-blur blur-2"></div>
+
+    <div class="app-container">
+        <header>
+            <div class="badge-pill">
+                <span class="dot"></span>
+                Geometry Master Suite &bull; X RPL B
+            </div>
+            <h1>Kalkulator Bangun Datar</h1>
+            <p>Pilih bentuk geometri 2D untuk menghitung luas, keliling, dan visualisasi interaktif secara instan</p>
+        </header>
+
+        <!-- Shape Selector Navigation Tabs -->
+        <nav class="shape-nav-wrap" id="shapeNav">
+            <button type="button" class="shape-tab-btn active" onclick="switchShape('persegiPanjang')">
+                <span>🟦</span> Persegi Panjang
+            </button>
+            <button type="button" class="shape-tab-btn" onclick="switchShape('persegi')">
+                <span>⏹️</span> Persegi
+            </button>
+            <button type="button" class="shape-tab-btn" onclick="switchShape('segitiga')">
+                <span>🔺</span> Segitiga
+            </button>
+            <button type="button" class="shape-tab-btn" onclick="switchShape('lingkaran')">
+                <span>⚪</span> Lingkaran
+            </button>
+            <button type="button" class="shape-tab-btn" onclick="switchShape('jajarGenjang')">
+                <span>▱</span> Jajar Genjang
+            </button>
+            <button type="button" class="shape-tab-btn" onclick="switchShape('trapesium')">
+                <span>⏢</span> Trapesium
+            </button>
+            <button type="button" class="shape-tab-btn" onclick="switchShape('belahKetupat')">
+                <span>🔷</span> Belah Ketupat
+            </button>
+        </nav>
+
+        <div class="workspace-grid">
+            <!-- Left Panel: Input & Controls -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <span class="panel-title" id="panelTitle">
+                        <svg width="20" height="20" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                        Parameter Bentuk
+                    </span>
+                    <div class="unit-select-wrap">
+                        <button type="button" class="unit-btn active" onclick="setUnit('m')">m</button>
+                        <button type="button" class="unit-btn" onclick="setUnit('cm')">cm</button>
+                        <button type="button" class="unit-btn" onclick="setUnit('mm')">mm</button>
+                    </div>
+                </div>
+
+                <!-- Presets Area -->
+                <div class="presets-box">
+                    <span style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600;">PRESET CONTOH:</span>
+                    <div class="presets-row" id="presetsRow"></div>
+                </div>
+
+                <!-- Dynamic Input Container (Injected by JS) -->
+                <div class="inputs-container" id="inputsContainer"></div>
+
+                <!-- Actions -->
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" onclick="copyResults()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                        Salin Hasil
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetDefaults()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Visualizer & Results -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg width="20" height="20" fill="none" stroke="#38bdf8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"/></svg>
+                        Simulasi Visual 2D
+                    </span>
+                    <span style="font-size: 0.78rem; color: var(--text-dim);" id="shapeInfoTag">Bentuk Aktif</span>
+                </div>
+
+                <!-- 2D SVG Visualizer Preview Box -->
+                <div class="preview-box">
+                    <div class="grid-backdrop"></div>
+                    <svg id="visualSvg" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
+                        <!-- Dynamic SVG paths and annotations inserted here -->
+                    </svg>
+                </div>
+
+                <!-- Result Cards -->
+                <div class="results-grid">
+                    <!-- Luas -->
+                    <div class="metric-card luas-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Luas Bangun</span>
+                            <span style="font-size: 0.95rem;">📐</span>
+                        </div>
+                        <div class="metric-value">
+                            <span id="luasDisplay">0</span>
+                            <span class="metric-unit"><span class="unit-label">m</span>²</span>
+                        </div>
+                    </div>
+
+                    <!-- Keliling -->
+                    <div class="metric-card keliling-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Keliling</span>
+                            <span style="font-size: 0.95rem;">📏</span>
+                        </div>
+                        <div class="metric-value">
+                            <span id="kelilingDisplay">0</span>
+                            <span class="metric-unit"><span class="unit-label">m</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Extra metric (Diagonal / Diameter / dll) -->
+                    <div class="metric-card extra-card" id="extraMetricCard" style="grid-column: span 2;">
+                        <div class="metric-header">
+                            <span class="metric-label" id="extraMetricLabel">Parameter Tambahan</span>
+                            <span style="font-size: 0.95rem;">⚡</span>
+                        </div>
+                        <div class="metric-value" style="font-size: 1.4rem;">
+                            <span id="extraMetricDisplay">0</span>
+                            <span class="metric-unit" id="extraMetricUnit"><span class="unit-label">m</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Formulas Breakdown -->
+                <div class="formula-card">
+                    <div class="formula-title">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Langkah & Rumus Perhitungan:
+                    </div>
+                    <div id="formulaStepsContainer">
+                        <!-- Step lines inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <span>Data berhasil disalin ke clipboard!</span>
+    </div>
+
+    <script>
+        // Data Konfigurasi Bangun Datar
+        const SHAPES = {
+            persegiPanjang: {
+                name: "Persegi Panjang",
+                inputs: [
+                    { id: "panjang", label: "Panjang", hint: "Sisi Horizontal", default: 100, min: 1, max: 300 },
+                    { id: "lebar", label: "Lebar", hint: "Sisi Vertikal", default: 50, min: 1, max: 300 }
+                ],
+                presets: [
+                    { name: "100 × 50 (Tugas)", values: { panjang: 100, lebar: 50 } },
+                    { name: "105 × 68 (Lapangan)", values: { panjang: 105, lebar: 68 } },
+                    { name: "16 × 9 (Layar)", values: { panjang: 16, lebar: 9 } }
+                ],
+                calculate: (v) => {
+                    const p = v.panjang || 0;
+                    const l = v.lebar || 0;
+                    const luas = p * l;
+                    const keliling = 2 * (p + l);
+                    const diagonal = Math.sqrt(p * p + l * l);
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Diagonal (Garis Miring)", value: diagonal, unitSuffix: "" },
+                        steps: [
+                            { name: "Luas (p × l)", calc: `${p} × ${l} = ${formatNumber(luas)} [unit]²` },
+                            { name: "Keliling (2 × (p + l))", calc: `2 × (${p} + ${l}) = ${formatNumber(keliling)} [unit]` },
+                            { name: "Diagonal (√(p² + l²))", calc: `√(${p}² + ${l}²) = ${formatNumber(diagonal)} [unit]` }
+                        ],
+                        svg: (w, h) => renderRectangleSvg(p, l)
+                    };
+                }
+            },
+            persegi: {
+                name: "Persegi",
+                inputs: [
+                    { id: "sisi", label: "Panjang Sisi (s)", hint: "Semua Sisi Sama", default: 50, min: 1, max: 300 }
+                ],
+                presets: [
+                    { name: "50 × 50 (Standar)", values: { sisi: 50 } },
+                    { name: "25 × 25 (Ubin)", values: { sisi: 25 } },
+                    { name: "100 × 100 (Besar)", values: { sisi: 100 } }
+                ],
+                calculate: (v) => {
+                    const s = v.sisi || 0;
+                    const luas = s * s;
+                    const keliling = 4 * s;
+                    const diagonal = s * Math.SQRT2;
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Diagonal (s × √2)", value: diagonal, unitSuffix: "" },
+                        steps: [
+                            { name: "Luas (s × s)", calc: `${s} × ${s} = ${formatNumber(luas)} [unit]²` },
+                            { name: "Keliling (4 × s)", calc: `4 × ${s} = ${formatNumber(keliling)} [unit]` },
+                            { name: "Diagonal (s√2)", calc: `${s} × 1.414 = ${formatNumber(diagonal)} [unit]` }
+                        ],
+                        svg: () => renderSquareSvg(s)
+                    };
+                }
+            },
+            segitiga: {
+                name: "Segitiga (Siku-siku / Umum)",
+                inputs: [
+                    { id: "alas", label: "Alas (a)", hint: "Panjang Dasar", default: 60, min: 1, max: 300 },
+                    { id: "tinggi", label: "Tinggi (t)", hint: "Tinggi Tegak Lurus", default: 80, min: 1, max: 300 },
+                    { id: "sisiMiring", label: "Sisi Miring (c)", hint: "Kosongkan untuk otomatis siku-siku", default: 100, min: 1, max: 400 }
+                ],
+                presets: [
+                    { name: "3 - 4 - 5 (Pythagoras)", values: { alas: 30, tinggi: 40, sisiMiring: 50 } },
+                    { name: "60 - 80 - 100", values: { alas: 60, tinggi: 80, sisiMiring: 100 } },
+                    { name: "5 - 12 - 13", values: { alas: 50, tinggi: 120, sisiMiring: 130 } }
+                ],
+                calculate: (v) => {
+                    const a = v.alas || 0;
+                    const t = v.tinggi || 0;
+                    let c = v.sisiMiring || 0;
+                    if (c <= 0) c = Math.sqrt(a * a + t * t);
+                    const luas = 0.5 * a * t;
+                    const keliling = a + t + c;
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Hipotenusa / Sisi Miring", value: c, unitSuffix: "" },
+                        steps: [
+                            { name: "Luas (½ × a × t)", calc: `½ × ${a} × ${t} = ${formatNumber(luas)} [unit]²` },
+                            { name: "Keliling (a + t + c)", calc: `${a} + ${t} + ${formatNumber(c)} = ${formatNumber(keliling)} [unit]` },
+                            { name: "Hipotenusa (√(a² + t²))", calc: `√(${a}² + ${t}²) = ${formatNumber(c)} [unit]` }
+                        ],
+                        svg: () => renderTriangleSvg(a, t)
+                    };
+                }
+            },
+            lingkaran: {
+                name: "Lingkaran",
+                inputs: [
+                    { id: "radius", label: "Jari-Jari (r)", hint: "Jarak dari Titik Pusat", default: 28, min: 1, max: 200 }
+                ],
+                presets: [
+                    { name: "r = 7 (Kelipatan 7)", values: { radius: 7 } },
+                    { name: "r = 28", values: { radius: 28 } },
+                    { name: "r = 50", values: { radius: 50 } }
+                ],
+                calculate: (v) => {
+                    const r = v.radius || 0;
+                    const luas = Math.PI * r * r;
+                    const keliling = 2 * Math.PI * r;
+                    const diameter = 2 * r;
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Diameter (2 × r)", value: diameter, unitSuffix: "" },
+                        steps: [
+                            { name: "Luas (π × r²)", calc: `π × ${r}² = ${formatNumber(luas)} [unit]²` },
+                            { name: "Keliling (2 × π × r)", calc: `2 × π × ${r} = ${formatNumber(keliling)} [unit]` },
+                            { name: "Diameter (2 × r)", calc: `2 × ${r} = ${formatNumber(diameter)} [unit]` }
+                        ],
+                        svg: () => renderCircleSvg(r)
+                    };
+                }
+            },
+            jajarGenjang: {
+                name: "Jajar Genjang",
+                inputs: [
+                    { id: "alas", label: "Alas (a)", hint: "Panjang Sisi Bawah", default: 80, min: 1, max: 300 },
+                    { id: "tinggi", label: "Tinggi (t)", hint: "Jarak Antara Sisi Sejajar", default: 50, min: 1, max: 300 },
+                    { id: "sisiMiring", label: "Sisi Miring (b)", hint: "Sisi Diagonal Luar", default: 60, min: 1, max: 300 }
+                ],
+                presets: [
+                    { name: "80 × 50 (b: 60)", values: { alas: 80, tinggi: 50, sisiMiring: 60 } },
+                    { name: "100 × 40 (b: 50)", values: { alas: 100, tinggi: 40, sisiMiring: 50 } }
+                ],
+                calculate: (v) => {
+                    const a = v.alas || 0;
+                    const t = v.tinggi || 0;
+                    const b = v.sisiMiring || 0;
+                    const luas = a * t;
+                    const keliling = 2 * (a + b);
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Rasio Alas : Tinggi", value: (t > 0 ? (a / t).toFixed(2) : 0), unitSuffix: " : 1", isNumeric: false },
+                        steps: [
+                            { name: "Luas (a × t)", calc: `${a} × ${t} = ${formatNumber(luas)} [unit]²` },
+                            { name: "Keliling (2 × (a + b))", calc: `2 × (${a} + ${b}) = ${formatNumber(keliling)} [unit]` }
+                        ],
+                        svg: () => renderParallelogramSvg(a, t, b)
+                    };
+                }
+            },
+            trapesium: {
+                name: "Trapesium",
+                inputs: [
+                    { id: "sisiA", label: "Sisi Atas (a)", hint: "Sisi Sejajar Atas", default: 50, min: 1, max: 300 },
+                    { id: "sisiB", label: "Sisi Bawah (b)", hint: "Sisi Sejajar Bawah", default: 90, min: 1, max: 300 },
+                    { id: "tinggi", label: "Tinggi (t)", hint: "Jarak Sejajar", default: 45, min: 1, max: 300 }
+                ],
+                presets: [
+                    { name: "50 & 90 (t: 45)", values: { sisiA: 50, sisiB: 90, tinggi: 45 } },
+                    { name: "40 & 70 (t: 30)", values: { sisiA: 40, sisiB: 70, tinggi: 30 } }
+                ],
+                calculate: (v) => {
+                    const a = v.sisiA || 0;
+                    const b = v.sisiB || 0;
+                    const t = v.tinggi || 0;
+                    const diff = Math.abs(b - a) / 2;
+                    const sisiMiringEst = Math.sqrt(diff * diff + t * t);
+                    const luas = 0.5 * (a + b) * t;
+                    const keliling = a + b + (2 * sisiMiringEst);
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Sisi Miring Sama Kaki (Est.)", value: sisiMiringEst, unitSuffix: "" },
+                        steps: [
+                            { name: "Luas (½ × (a + b) × t)", calc: `½ × (${a} + ${b}) × ${t} = ${formatNumber(luas)} [unit]²` },
+                            { name: "Keliling (a + b + 2 × miring)", calc: `${a} + ${b} + 2×${formatNumber(sisiMiringEst)} = ${formatNumber(keliling)} [unit]` }
+                        ],
+                        svg: () => renderTrapezoidSvg(a, b, t)
+                    };
+                }
+            },
+            belahKetupat: {
+                name: "Belah Ketupat",
+                inputs: [
+                    { id: "d1", label: "Diagonal 1 (d₁)", hint: "Diagonal Horizontal", default: 80, min: 1, max: 300 },
+                    { id: "d2", label: "Diagonal 2 (d₂)", hint: "Diagonal Vertikal", default: 60, min: 1, max: 300 }
+                ],
+                presets: [
+                    { name: "d₁=80, d₂=60 (s: 50)", values: { d1: 80, d2: 60 } },
+                    { name: "d₁=24, d₂=10", values: { d1: 24, d2: 10 } }
+                ],
+                calculate: (v) => {
+                    const d1 = v.d1 || 0;
+                    const d2 = v.d2 || 0;
+                    const s = Math.sqrt(Math.pow(d1 / 2, 2) + Math.pow(d2 / 2, 2));
+                    const luas = 0.5 * d1 * d2;
+                    const keliling = 4 * s;
+                    return {
+                        luas,
+                        keliling,
+                        extra: { label: "Panjang Sisi (s)", value: s, unitSuffix: "" },
+                        steps: [
+                            { name: "Luas (½ × d₁ × d₂)", calc: `½ × ${d1} × ${d2} = ${formatNumber(luas)} [unit]²` },
+                            { name: "Sisi s = √((½d₁)² + (½d₂)²)", calc: `√(${d1 / 2}² + ${d2 / 2}²) = ${formatNumber(s)} [unit]` },
+                            { name: "Keliling (4 × s)", calc: `4 × ${formatNumber(s)} = ${formatNumber(keliling)} [unit]` }
+                        ],
+                        svg: () => renderRhombusSvg(d1, d2)
+                    };
+                }
+            }
+        };
+
+        // App States
+        let currentShapeKey = 'persegiPanjang';
+        let currentUnit = 'm';
+
+        // Helper format number
+        function formatNumber(num) {
+            if (typeof num === 'string') return num;
+            return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(num);
+        }
+
+        // Switch Active Shape
+        function switchShape(shapeKey) {
+            currentShapeKey = shapeKey;
+            const shape = SHAPES[shapeKey];
+
+            // Update Tab Active Style
+            document.querySelectorAll('.shape-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(shapeKey));
+            });
+
+            document.getElementById('shapeInfoTag').textContent = shape.name;
+
+            // Render Presets
+            renderPresets(shape);
+
+            // Render Inputs
+            renderInputs(shape);
+
+            // Calculate
+            calculate();
+        }
+
+        // Render Preset Buttons
+        function renderPresets(shape) {
+            const container = document.getElementById('presetsRow');
+            container.innerHTML = '';
+            shape.presets.forEach(p => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'preset-chip';
+                btn.textContent = p.name;
+                btn.onclick = () => {
+                    Object.entries(p.values).forEach(([k, val]) => {
+                        const numInput = document.getElementById(`input_${k}`);
+                        const rangeInput = document.getElementById(`range_${k}`);
+                        if (numInput) numInput.value = val;
+                        if (rangeInput) rangeInput.value = val;
+                    });
+                    calculate();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Render Dynamic Input Elements
+        function renderInputs(shape) {
+            const container = document.getElementById('inputsContainer');
+            container.innerHTML = '';
+
+            shape.inputs.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'input-card';
+
+                card.innerHTML = `
+                    <div class="input-label-row">
+                        <label for="input_${item.id}">${item.label} (<span class="unit-label">${currentUnit}</span>)</label>
+                        <span class="input-hint">${item.hint}</span>
+                    </div>
+                    <input type="number" id="input_${item.id}" class="number-input-field" value="${item.default}" min="${item.min}" max="10000" step="any">
+                    <input type="range" id="range_${item.id}" class="range-slider" value="${item.default}" min="${item.min}" max="${item.max}">
+                `;
+
+                container.appendChild(card);
+
+                const numInput = card.querySelector(`#input_${item.id}`);
+                const rangeInput = card.querySelector(`#range_${item.id}`);
+
+                numInput.addEventListener('input', () => {
+                    rangeInput.value = numInput.value;
+                    calculate();
+                });
+
+                rangeInput.addEventListener('input', () => {
+                    numInput.value = rangeInput.value;
+                    calculate();
+                });
+            });
+        }
+
+        // Set Measurement Unit
+        function setUnit(unit) {
+            currentUnit = unit;
+            document.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.trim() === unit);
+            });
+            document.querySelectorAll('.unit-label').forEach(el => {
+                el.textContent = unit;
+            });
+            calculate();
+        }
+
+        // Reset to Default Values
+        function resetDefaults() {
+            const shape = SHAPES[currentShapeKey];
+            shape.inputs.forEach(item => {
+                const numInput = document.getElementById(`input_${item.id}`);
+                const rangeInput = document.getElementById(`range_${item.id}`);
+                if (numInput) numInput.value = item.default;
+                if (rangeInput) rangeInput.value = item.default;
+            });
+            calculate();
+        }
+
+        // Read current input values
+        function getCurrentValues() {
+            const shape = SHAPES[currentShapeKey];
+            const values = {};
+            shape.inputs.forEach(item => {
+                const el = document.getElementById(`input_${item.id}`);
+                values[item.id] = el ? parseFloat(el.value) || 0 : 0;
+            });
+            return values;
+        }
+
+        // Main Calculation Function
+        function calculate() {
+            const shape = SHAPES[currentShapeKey];
+            const values = getCurrentValues();
+            const result = shape.calculate(values);
+
+            // Display Luas & Keliling
+            document.getElementById('luasDisplay').textContent = formatNumber(result.luas);
+            document.getElementById('kelilingDisplay').textContent = formatNumber(result.keliling);
+
+            // Extra Metric
+            const extraCard = document.getElementById('extraMetricCard');
+            if (result.extra) {
+                extraCard.style.display = 'block';
+                document.getElementById('extraMetricLabel').textContent = result.extra.label;
+                const formattedVal = (result.extra.isNumeric === false) 
+                    ? result.extra.value 
+                    : formatNumber(result.extra.value);
+                document.getElementById('extraMetricDisplay').textContent = formattedVal;
+                document.getElementById('extraMetricUnit').innerHTML = result.extra.unitSuffix || `<span class="unit-label">${currentUnit}</span>`;
+            } else {
+                extraCard.style.display = 'none';
+            }
+
+            // Steps formula breakdown
+            const stepsContainer = document.getElementById('formulaStepsContainer');
+            stepsContainer.innerHTML = '';
+            result.steps.forEach(st => {
+                const line = document.createElement('div');
+                line.className = 'formula-line';
+                const formattedText = st.calc.replaceAll('[unit]', currentUnit);
+                line.innerHTML = `<span>${st.name}</span><strong>${formattedText}</strong>`;
+                stepsContainer.appendChild(line);
+            });
+
+            // Update SVG Visualizer
+            const svgEl = document.getElementById('visualSvg');
+            svgEl.innerHTML = result.svg();
+        }
+
+        // ================= SVG DRAWING HELPERS =================
+        function renderRectangleSvg(p, l) {
+            if (p <= 0 || l <= 0) return '';
+            const maxW = 240, maxH = 130;
+            const scale = Math.min(maxW / p, maxH / l);
+            const w = Math.max(35, Math.min(maxW, p * scale));
+            const h = Math.max(25, Math.min(maxH, l * scale));
+            const x = (360 - w) / 2;
+            const y = (200 - h) / 2;
+
+            return `
+                <defs>
+                    <linearGradient id="rectGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.4"/>
+                    </linearGradient>
+                </defs>
+                <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="url(#rectGrad)" stroke="#818cf8" stroke-width="2.5" />
+                <!-- Labels -->
+                <text x="${x + w/2}" y="${y - 10}" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">p: ${formatNumber(p)} ${currentUnit}</text>
+                <text x="${x + w + 10}" y="${y + h/2 + 4}" fill="#a5b4fc" font-size="12" font-weight="700" text-anchor="start">l: ${formatNumber(l)} ${currentUnit}</text>
+                <text x="${x + w/2}" y="${y + h/2 + 4}" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle">${formatNumber(p)} × ${formatNumber(l)}</text>
+            `;
+        }
+
+        function renderSquareSvg(s) {
+            if (s <= 0) return '';
+            const size = 120;
+            const x = (360 - size) / 2;
+            const y = (200 - size) / 2;
+
+            return `
+                <defs>
+                    <linearGradient id="sqGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#6366f1" stop-opacity="0.4"/>
+                    </linearGradient>
+                </defs>
+                <rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="url(#sqGrad)" stroke="#60a5fa" stroke-width="2.5" />
+                <text x="${x + size/2}" y="${y - 10}" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">s: ${formatNumber(s)} ${currentUnit}</text>
+                <text x="${x + size + 10}" y="${y + size/2 + 4}" fill="#a5b4fc" font-size="12" font-weight="700" text-anchor="start">s: ${formatNumber(s)} ${currentUnit}</text>
+                <text x="${x + size/2}" y="${y + size/2 + 4}" fill="#ffffff" font-size="12" font-weight="700" text-anchor="middle">s = ${formatNumber(s)}</text>
+            `;
+        }
+
+        function renderTriangleSvg(a, t) {
+            if (a <= 0 || t <= 0) return '';
+            const maxW = 220, maxH = 130;
+            const scale = Math.min(maxW / a, maxH / t);
+            const w = Math.max(40, Math.min(maxW, a * scale));
+            const h = Math.max(35, Math.min(maxH, t * scale));
+            const x1 = (360 - w) / 2, y1 = (200 + h) / 2;
+            const x2 = x1 + w, y2 = y1;
+            const x3 = x1, y3 = y1 - h;
+
+            return `
+                <defs>
+                    <linearGradient id="triGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ec4899" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#a855f7" stop-opacity="0.4"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3}" fill="url(#triGrad)" stroke="#f472b6" stroke-width="2.5" stroke-linejoin="round"/>
+                <!-- Square corner for right angle -->
+                <rect x="${x1}" y="${y1 - 12}" width="12" height="12" fill="none" stroke="#f472b6" stroke-width="1.5" />
+                <text x="${x1 + w/2}" y="${y1 + 18}" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">alas: ${formatNumber(a)} ${currentUnit}</text>
+                <text x="${x1 - 12}" y="${y1 - h/2}" fill="#a5b4fc" font-size="12" font-weight="700" text-anchor="end">t: ${formatNumber(t)} ${currentUnit}</text>
+            `;
+        }
+
+        function renderCircleSvg(r) {
+            if (r <= 0) return '';
+            const radius = 60;
+            const cx = 180, cy = 100;
+
+            return `
+                <defs>
+                    <linearGradient id="circGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.4"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="${cx}" cy="${cy}" r="${radius}" fill="url(#circGrad)" stroke="#38bdf8" stroke-width="2.5" />
+                <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffffff" />
+                <!-- Radius indicator line -->
+                <line x1="${cx}" y1="${cy}" x2="${cx + radius}" y2="${cy}" stroke="#ffffff" stroke-width="2" stroke-dasharray="4" />
+                <text x="${cx + radius/2}" y="${cy - 8}" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle">r: ${formatNumber(r)} ${currentUnit}</text>
+                <text x="${cx}" y="${cy + radius + 18}" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">d = 2r = ${formatNumber(r*2)} ${currentUnit}</text>
+            `;
+        }
+
+        function renderParallelogramSvg(a, t, b) {
+            if (a <= 0 || t <= 0) return '';
+            const w = 150, h = 80, slant = 40;
+            const x = (360 - (w + slant)) / 2;
+            const y = (200 - h) / 2;
+
+            const p1 = `${x + slant},${y}`;
+            const p2 = `${x + slant + w},${y}`;
+            const p3 = `${x + w},${y + h}`;
+            const p4 = `${x},${y + h}`;
+
+            return `
+                <defs>
+                    <linearGradient id="paraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.4"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="${p1} ${p2} ${p3} ${p4}" fill="url(#paraGrad)" stroke="#34d399" stroke-width="2.5" stroke-linejoin="round"/>
+                <!-- Height dotted line -->
+                <line x1="${x + slant}" y1="${y}" x2="${x + slant}" y2="${y + h}" stroke="#ffffff" stroke-dasharray="3" stroke-width="1.5"/>
+                <text x="${x + slant - 8}" y="${y + h/2}" fill="#ffffff" font-size="11" text-anchor="end">t: ${formatNumber(t)}</text>
+                <text x="${x + slant + w/2}" y="${y - 8}" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">alas: ${formatNumber(a)} ${currentUnit}</text>
+                <text x="${x + slant + w + 10}" y="${y + h/2}" fill="#a5b4fc" font-size="11" text-anchor="start">b: ${formatNumber(b)}</text>
+            `;
+        }
+
+        function renderTrapezoidSvg(a, b, t) {
+            if (a <= 0 || b <= 0 || t <= 0) return '';
+            const topW = 100, botW = 180, h = 90;
+            const cx = 180;
+            const yTop = (200 - h) / 2;
+            const yBot = yTop + h;
+
+            const xTopL = cx - topW / 2;
+            const xTopR = cx + topW / 2;
+            const xBotL = cx - botW / 2;
+            const xBotR = cx + botW / 2;
+
+            return `
+                <defs>
+                    <linearGradient id="trapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#ef4444" stop-opacity="0.4"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="${xTopL},${yTop} ${xTopR},${yTop} ${xBotR},${yBot} ${xBotL},${yBot}" fill="url(#trapGrad)" stroke="#fbbf24" stroke-width="2.5" stroke-linejoin="round"/>
+                <line x1="${xTopL}" y1="${yTop}" x2="${xTopL}" y2="${yBot}" stroke="#ffffff" stroke-dasharray="3" stroke-width="1.5"/>
+                <text x="${cx}" y="${yTop - 8}" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">sisi atas (a): ${formatNumber(a)} ${currentUnit}</text>
+                <text x="${cx}" y="${yBot + 18}" fill="#a5b4fc" font-size="12" font-weight="700" text-anchor="middle">sisi bawah (b): ${formatNumber(b)} ${currentUnit}</text>
+                <text x="${xTopL - 8}" y="${yTop + h/2}" fill="#ffffff" font-size="11" text-anchor="end">t: ${formatNumber(t)}</text>
+            `;
+        }
+
+        function renderRhombusSvg(d1, d2) {
+            if (d1 <= 0 || d2 <= 0) return '';
+            const w = 150, h = 110;
+            const cx = 180, cy = 100;
+
+            const top = `${cx},${cy - h/2}`;
+            const right = `${cx + w/2},${cy}`;
+            const bottom = `${cx},${cy + h/2}`;
+            const left = `${cx - w/2},${cy}`;
+
+            return `
+                <defs>
+                    <linearGradient id="rhomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.45"/>
+                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.45"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="${top} ${right} ${bottom} ${left}" fill="url(#rhomGrad)" stroke="#a78bfa" stroke-width="2.5" stroke-linejoin="round"/>
+                <!-- Diagonal inner guidelines -->
+                <line x1="${cx - w/2}" y1="${cy}" x2="${cx + w/2}" y2="${cy}" stroke="#ffffff" stroke-dasharray="3" stroke-width="1.5" />
+                <line x1="${cx}" y1="${cy - h/2}" x2="${cx}" y2="${cy + h/2}" stroke="#ffffff" stroke-dasharray="3" stroke-width="1.5" />
+                <text x="${cx}" y="${cy - 6}" fill="#38bdf8" font-size="11" font-weight="700" text-anchor="middle">d₁: ${formatNumber(d1)} ${currentUnit}</text>
+                <text x="${cx + 8}" y="${cy - h/4}" fill="#a5b4fc" font-size="11" font-weight="700" text-anchor="start">d₂: ${formatNumber(d2)} ${currentUnit}</text>
+            `;
+        }
+
+        // Copy Results to Clipboard
+        function copyResults() {
+            const shape = SHAPES[currentShapeKey];
+            const luas = document.getElementById('luasDisplay').textContent;
+            const keliling = document.getElementById('kelilingDisplay').textContent;
+            const values = getCurrentValues();
+
+            let paramsText = Object.entries(values)
+                .map(([k, v]) => `• ${k}: ${v} ${currentUnit}`)
+                .join('\n');
+
+            const text = `📐 Hasil Perhitungan: ${shape.name}\n` +
+                `${paramsText}\n` +
+                `• Luas: ${luas} ${currentUnit}²\n` +
+                `• Keliling: ${keliling} ${currentUnit}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Hasil perhitungan berhasil disalin!");
+            }).catch(() => {
+                showToast("Gagal menyalin data.");
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.querySelector('span').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Initialize with default shape
+        switchShape('persegiPanjang');
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Pro — Kalkulator Persegi Panjang Modern</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #090d16;
+            --surface-glass: rgba(18, 24, 38, 0.75);
+            --surface-card: rgba(26, 34, 53, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-focus: #6366f1;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --accent-cyan: #06b6d4;
+            --accent-cyan-glow: rgba(6, 182, 212, 0.3);
+            --accent-emerald: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.18) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 16px;
+            overflow-x: hidden;
+        }
+
+        /* Ambient glowing background shapes */
+        .ambient-blur {
+            position: fixed;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .blur-1 { top: 10%; left: 15%; background: #6366f1; }
+        .blur-2 { bottom: 10%; right: 15%; background: #06b6d4; }
+
+        .app-container {
+            width: 100%;
+            max-width: 980px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .badge-pill span.dot {
+            width: 6px;
+            height: 6px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #38bdf8;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.3rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Main Grid Layout */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        @media (max-width: 840px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Cards */
+        .glass-panel {
+            background: var(--surface-glass);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Preset Chips */
+        .presets-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preset-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-chip:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: #fff;
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Unit Selector */
+        .unit-select-wrap {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            padding: 3px;
+        }
+
+        .unit-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .unit-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }
+
+        /* Input Card Rows */
+        .input-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-card:focus-within {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 16px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .input-label-row label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .number-input-field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.35rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            padding: 10px 14px;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .number-input-field:focus {
+            border-color: var(--border-focus);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        /* Custom Modern Sliders */
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            outline: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 0 10px #6366f1;
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            background: #818cf8;
+        }
+
+        /* Visual Canvas Area */
+        .preview-box {
+            position: relative;
+            background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        .grid-backdrop {
+            position: absolute;
+            inset: 0;
+            background-size: 20px 20px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            pointer-events: none;
+        }
+
+        .shape-rectangle {
+            position: relative;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.35) 0%, rgba(6, 182, 212, 0.35) 100%);
+            border: 2px solid #818cf8;
+            box-shadow: 0 0 24px rgba(99, 102, 241, 0.4), inset 0 0 15px rgba(6, 182, 212, 0.2);
+            border-radius: 8px;
+            transition: width 0.15s ease-out, height 0.15s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            min-height: 30px;
+        }
+
+        .shape-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #e0e7ff;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* Dimension Guides */
+        .dim-guide-top {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.72rem;
+            color: #38bdf8;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .dim-guide-right {
+            position: absolute;
+            right: -42px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.72rem;
+            color: #a5b4fc;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Results Display Grid */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .metric-card {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .metric-card.luas-card::before {
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+        }
+
+        .metric-card.keliling-card::before {
+            background: linear-gradient(90deg, #06b6d4, #10b981);
+        }
+
+        .metric-card.diagonal-card::before {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+
+        .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            word-break: break-all;
+        }
+
+        .metric-unit {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* Formula Step-by-Step Card */
+        .formula-card {
+            background: rgba(10, 15, 30, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 0.84rem;
+        }
+
+        .formula-title {
+            color: #38bdf8;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .formula-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+        }
+
+        .formula-line:last-child {
+            border-bottom: none;
+        }
+
+        .formula-line strong {
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Actions */
+        .actions-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            box-shadow: 0 6px 20px var(--primary-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border: 1px solid var(--border-glass);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 999;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-blur blur-1"></div>
+    <div class="ambient-blur blur-2"></div>
+
+    <div class="app-container">
+        <header>
+            <div class="badge-pill">
+                <span class="dot"></span>
+                Interactive Math Suite &bull; X RPL B
+            </div>
+            <h1>Kalkulator Persegi Panjang</h1>
+            <p>Eksplorasi rumus, simulasi bentuk 2D, dan hitung luas & keliling secara real-time</p>
+        </header>
+
+        <div class="workspace-grid">
+            <!-- Left Panel: Inputs & Controls -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg width="20" height="20" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                        Parameter Dimensi
+                    </span>
+                    <div class="unit-select-wrap">
+                        <button type="button" class="unit-btn active" onclick="setUnit('m')">m</button>
+                        <button type="button" class="unit-btn" onclick="setUnit('cm')">cm</button>
+                        <button type="button" class="unit-btn" onclick="setUnit('mm')">mm</button>
+                    </div>
+                </div>
+
+                <!-- Presets -->
+                <div>
+                    <span style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600; display: block; margin-bottom: 6px;">PRESET CEPAT:</span>
+                    <div class="presets-row">
+                        <button type="button" class="preset-chip" onclick="applyPreset(100, 50)">100 &times; 50 (Tugas)</button>
+                        <button type="button" class="preset-chip" onclick="applyPreset(60, 60)">60 &times; 60 (Persegi)</button>
+                        <button type="button" class="preset-chip" onclick="applyPreset(105, 68)">105 &times; 68 (Sepakbola)</button>
+                        <button type="button" class="preset-chip" onclick="applyPreset(192, 108)">192 &times; 108 (16:9)</button>
+                    </div>
+                </div>
+
+                <!-- Input Panjang -->
+                <div class="input-card">
+                    <div class="input-label-row">
+                        <label for="panjangInput">Panjang (<span class="unit-label">m</span>)</label>
+                        <span style="font-size: 0.78rem; color: #38bdf8;">Horizontal</span>
+                    </div>
+                    <input type="number" id="panjangInput" class="number-input-field" value="100" min="1" max="1000" step="any">
+                    <input type="range" id="panjangRange" class="range-slider" value="100" min="1" max="300">
+                </div>
+
+                <!-- Input Lebar -->
+                <div class="input-card">
+                    <div class="input-label-row">
+                        <label for="lebarInput">Lebar (<span class="unit-label">m</span>)</label>
+                        <span style="font-size: 0.78rem; color: #a5b4fc;">Vertikal</span>
+                    </div>
+                    <input type="number" id="lebarInput" class="number-input-field" value="50" min="1" max="1000" step="any">
+                    <input type="range" id="lebarRange" class="range-slider" value="50" min="1" max="300">
+                </div>
+
+                <!-- Actions -->
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" onclick="copyResults()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                        Salin Data
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetDefaults()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Visualizer & Calculated Metrics -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg width="20" height="20" fill="none" stroke="#38bdf8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"/></svg>
+                        Simulasi Visual 2D
+                    </span>
+                    <span style="font-size: 0.78rem; color: var(--text-dim);" id="ratioText">Rasio: 2 : 1</span>
+                </div>
+
+                <!-- 2D Live Visualizer Preview -->
+                <div class="preview-box">
+                    <div class="grid-backdrop"></div>
+                    <div class="shape-rectangle" id="rectShape">
+                        <span class="dim-guide-top" id="topGuide">p: 100 m</span>
+                        <span class="dim-guide-right" id="rightGuide">l: 50 m</span>
+                        <span class="shape-badge" id="shapeBadge">100 &times; 50</span>
+                    </div>
+                </div>
+
+                <!-- Metric Cards -->
+                <div class="results-grid">
+                    <!-- Luas Card -->
+                    <div class="metric-card luas-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Luas Bangun</span>
+                            <span class="metric-icon">📐</span>
+                        </div>
+                        <div class="metric-value">
+                            <span id="luasDisplay">5.000</span>
+                            <span class="metric-unit"><span class="unit-label">m</span>²</span>
+                        </div>
+                    </div>
+
+                    <!-- Keliling Card -->
+                    <div class="metric-card keliling-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Keliling</span>
+                            <span class="metric-icon">📏</span>
+                        </div>
+                        <div class="metric-value">
+                            <span id="kelilingDisplay">300</span>
+                            <span class="metric-unit"><span class="unit-label">m</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Diagonal Card (Bonus) -->
+                    <div class="metric-card diagonal-card" style="grid-column: span 2;">
+                        <div class="metric-header">
+                            <span class="metric-label">Panjang Diagonal (Garis Miring)</span>
+                            <span class="metric-icon">⚡</span>
+                        </div>
+                        <div class="metric-value" style="font-size: 1.35rem;">
+                            <span id="diagonalDisplay">111.80</span>
+                            <span class="metric-unit"><span class="unit-label">m</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Breakdown -->
+                <div class="formula-card">
+                    <div class="formula-title">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Langkah Perhitungan Rumus:
+                    </div>
+                    <div class="formula-line">
+                        <span>Luas = <i>p &times; l</i></span>
+                        <strong id="stepLuas">100 &times; 50 = 5.000 m²</strong>
+                    </div>
+                    <div class="formula-line">
+                        <span>Keliling = <i>2 &times; (p + l)</i></span>
+                        <strong id="stepKeliling">2 &times; (100 + 50) = 300 m</strong>
+                    </div>
+                    <div class="formula-line">
+                        <span>Diagonal = <i>&radic;(p² + l²)</i></span>
+                        <strong id="stepDiagonal">&radic;(100² + 50²) = 111.80 m</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <span>Data berhasil disalin ke clipboard!</span>
+    </div>
+
+    <script>
+        // State Satuan
+        let currentUnit = 'm';
+
+        // DOM Elemen Input
+        const panjangInput = document.getElementById('panjangInput');
+        const panjangRange = document.getElementById('panjangRange');
+        const lebarInput = document.getElementById('lebarInput');
+        const lebarRange = document.getElementById('lebarRange');
+
+        // DOM Elemen Tampilan Hasil
+        const luasDisplay = document.getElementById('luasDisplay');
+        const kelilingDisplay = document.getElementById('kelilingDisplay');
+        const diagonalDisplay = document.getElementById('diagonalDisplay');
+
+        // DOM Elemen Visualizer
+        const rectShape = document.getElementById('rectShape');
+        const topGuide = document.getElementById('topGuide');
+        const rightGuide = document.getElementById('rightGuide');
+        const shapeBadge = document.getElementById('shapeBadge');
+        const ratioText = document.getElementById('ratioText');
+
+        // DOM Elemen Langkah
+        const stepLuas = document.getElementById('stepLuas');
+        const stepKeliling = document.getElementById('stepKeliling');
+        const stepDiagonal = document.getElementById('stepDiagonal');
+
+        // Sinkronisasi Input dan Range Slider
+        panjangInput.addEventListener('input', () => {
+            panjangRange.value = panjangInput.value;
+            calculate();
+        });
+
+        panjangRange.addEventListener('input', () => {
+            panjangInput.value = panjangRange.value;
+            calculate();
+        });
+
+        lebarInput.addEventListener('input', () => {
+            lebarRange.value = lebarInput.value;
+            calculate();
+        });
+
+        lebarRange.addEventListener('input', () => {
+            lebarInput.value = lebarRange.value;
+            calculate();
+        });
+
+        // Format angka dengan pemisah ribuan
+        function formatNumber(num) {
+            return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(num);
+        }
+
+        // Fungsi Kalkulasi Utama
+        function calculate() {
+            let p = parseFloat(panjangInput.value) || 0;
+            let l = parseFloat(lebarInput.value) || 0;
+
+            if (p < 0) p = 0;
+            if (l < 0) l = 0;
+
+            // Rumus Matematika
+            const luas = p * l;
+            const keliling = 2 * (p + l);
+            const diagonal = Math.sqrt((p * p) + (l * l));
+
+            // Tampilkan Nilai Metrik
+            luasDisplay.textContent = formatNumber(luas);
+            kelilingDisplay.textContent = formatNumber(keliling);
+            diagonalDisplay.textContent = formatNumber(diagonal);
+
+            // Update Langkah Rumus
+            stepLuas.textContent = `${formatNumber(p)} × ${formatNumber(l)} = ${formatNumber(luas)} ${currentUnit}²`;
+            stepKeliling.textContent = `2 × (${formatNumber(p)} + ${formatNumber(l)}) = ${formatNumber(keliling)} ${currentUnit}`;
+            stepDiagonal.textContent = `√(${formatNumber(p)}² + ${formatNumber(l)}²) = ${formatNumber(diagonal)} ${currentUnit}`;
+
+            // Update Rasio
+            if (l > 0) {
+                const ratio = (p / l).toFixed(2);
+                ratioText.textContent = `Rasio: ${ratio} : 1`;
+            } else {
+                ratioText.textContent = `Rasio: -`;
+            }
+
+            // Update Visualizer Persegi Panjang
+            updateVisualizer(p, l);
+        }
+
+        // Fungsi Update Bentuk Visualizer secara Dinamis
+        function updateVisualizer(p, l) {
+            topGuide.textContent = `p: ${formatNumber(p)} ${currentUnit}`;
+            rightGuide.textContent = `l: ${formatNumber(l)} ${currentUnit}`;
+            shapeBadge.textContent = `${formatNumber(p)} × ${formatNumber(l)}`;
+
+            const maxBoxWidth = 260;
+            const maxBoxHeight = 140;
+
+            if (p <= 0 || l <= 0) {
+                rectShape.style.width = '50px';
+                rectShape.style.height = '40px';
+                return;
+            }
+
+            const scale = Math.min(maxBoxWidth / p, maxBoxHeight / l);
+            let displayW = Math.max(50, Math.min(maxBoxWidth, p * scale));
+            let displayH = Math.max(35, Math.min(maxBoxHeight, l * scale));
+
+            rectShape.style.width = `${displayW}px`;
+            rectShape.style.height = `${displayH}px`;
+        }
+
+        // Ganti Satuan
+        function setUnit(unit) {
+            currentUnit = unit;
+            document.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.trim() === unit);
+            });
+            document.querySelectorAll('.unit-label').forEach(el => {
+                el.textContent = unit;
+            });
+            calculate();
+        }
+
+        // Pasang Preset Cepat
+        function applyPreset(p, l) {
+            panjangInput.value = p;
+            panjangRange.value = p;
+            lebarInput.value = l;
+            lebarRange.value = l;
+            calculate();
+        }
+
+        // Reset ke Nilai Awal
+        function resetDefaults() {
+            applyPreset(100, 50);
+        }
+
+        // Salin Hasil ke Clipboard
+        function copyResults() {
+            const p = panjangInput.value;
+            const l = lebarInput.value;
+            const luas = luasDisplay.textContent;
+            const keliling = kelilingDisplay.textContent;
+            const diagonal = diagonalDisplay.textContent;
+
+            const text = `📐 Hasil Perhitungan Persegi Panjang\n` +
+                `• Panjang: ${p} ${currentUnit}\n` +
+                `• Lebar: ${l} ${currentUnit}\n` +
+                `• Luas: ${luas} ${currentUnit}²\n` +
+                `• Keliling: ${keliling} ${currentUnit}\n` +
+                `• Diagonal: ${diagonal} ${currentUnit}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Data perhitungan berhasil disalin!");
+            }).catch(() => {
+                showToast("Gagal menyalin data.");
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.querySelector('span').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Inisialisasi awal
+        calculate();
+    </script>
+</body>
+
+</html>
